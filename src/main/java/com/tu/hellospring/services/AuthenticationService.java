@@ -9,6 +9,7 @@ import com.tu.hellospring.dtos.requests.AuthenticationRequestDTO;
 import com.tu.hellospring.dtos.requests.IntrospectRequestDTO;
 import com.tu.hellospring.dtos.respones.AuthenticationResponseDTO;
 import com.tu.hellospring.dtos.respones.IntrospectResponseDTO;
+import com.tu.hellospring.entities.User;
 import com.tu.hellospring.exceptions.AppException;
 import com.tu.hellospring.exceptions.ErrorCode;
 import com.tu.hellospring.repositories.UserRepository;
@@ -20,10 +21,12 @@ import lombok.experimental.NonFinal;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.StringJoiner;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -47,7 +50,7 @@ public class AuthenticationService {
             throw new AppException(ErrorCode.UNAUTHENTICATED);
         }
 
-        String token = generateToken(request.getUsername());
+        String token = generateToken(user);
         return AuthenticationResponseDTO.builder()
                 .token(token)
                 .build();
@@ -55,7 +58,7 @@ public class AuthenticationService {
 
     @SneakyThrows
     public IntrospectResponseDTO introspect(IntrospectRequestDTO request) {
-        var token = request.getToken();
+        String token = request.getToken();
 
         var verifier = new MACVerifier(SIGNER_KEY.getBytes());
 
@@ -63,9 +66,9 @@ public class AuthenticationService {
 
         var expirationTime = signedJWT.getJWTClaimsSet().getExpirationTime();
 
-        var verified = signedJWT.verify(verifier);
+        boolean verified = signedJWT.verify(verifier);
 
-        var isValid = verified && expirationTime.after(new Date());
+        boolean isValid = verified && expirationTime.after(new Date());
 
         return IntrospectResponseDTO.builder()
                 .isValid(isValid)
@@ -73,17 +76,17 @@ public class AuthenticationService {
     }
 
     @SneakyThrows
-    private String generateToken(String username) {
+    private String generateToken(User user) {
         // header of JWT
         var header = new JWSHeader(JWSAlgorithm.HS512);
 
         // claim
         var jwtClaimsSet = new JWTClaimsSet.Builder()
-                .subject(username)
+                .subject(user.getUsername())
                 .issuer("ntuvu.com")
                 .issueTime(new Date())
                 .expirationTime(new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()))
-                .claim("customClaim", "Custom") // if you need more info
+                .claim("scope", buildScope(user))
                 .build();
         // payload
         var payload = new Payload(jwtClaimsSet.toJSONObject());
@@ -93,5 +96,13 @@ public class AuthenticationService {
         jwsObject.sign(new MACSigner(SIGNER_KEY.getBytes()));
 
         return jwsObject.serialize();
+    }
+
+    private String buildScope(User user){
+        StringJoiner stringJoiner = new StringJoiner(" ");
+        if (!CollectionUtils.isEmpty(user.getRoles()))
+            user.getRoles().forEach(stringJoiner::add);
+
+        return stringJoiner.toString();
     }
 }

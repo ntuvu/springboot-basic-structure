@@ -4,6 +4,7 @@ import com.tu.hellospring.dtos.requests.UserCreateRequestDTO;
 import com.tu.hellospring.dtos.requests.UserUpdateRequestDTO;
 import com.tu.hellospring.dtos.respones.UserResponseDTO;
 import com.tu.hellospring.entities.User;
+import com.tu.hellospring.enums.Role;
 import com.tu.hellospring.exceptions.AppException;
 import com.tu.hellospring.exceptions.ErrorCode;
 import com.tu.hellospring.mappers.UserMapper;
@@ -16,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -33,12 +35,13 @@ public class UserService {
         User user = userMapper.toUser(request);
         PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(10);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-
+        user.setRoles(Set.of(Role.USER.name()));
         return userMapper.toUserResponseDTO(userRepository.save(user));
     }
 
-    public List<User> getAll() {
-        return userRepository.findAll();
+    public List<UserResponseDTO> getAll() {
+
+        return userRepository.findAll().stream().map(userMapper::toUserResponseDTO).toList();
     }
 
     public UserResponseDTO getById(String id) {
