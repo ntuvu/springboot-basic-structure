@@ -13,6 +13,7 @@ public interface UserMapper {
 
     User toUser(UserCreateRequestDTO request);
 
+    @Mapping(target = "roles", ignore = true)
     void updateUser(@MappingTarget User user, UserUpdateRequestDTO request);
 
     UserResponseDTO toUserResponseDTO(User user);

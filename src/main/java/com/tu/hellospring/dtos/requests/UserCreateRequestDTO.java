@@ -1,6 +1,7 @@
 package com.tu.hellospring.dtos.requests;
 
-import com.tu.hellospring.exceptions.ErrorCode;
+import com.tu.hellospring.validators.DobConstraint;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -22,5 +23,6 @@ public class UserCreateRequestDTO {
 
     String lastName;
 
+    @DobConstraint(min = 16, message = "INVALID_DOB")
     LocalDate dob;
 }

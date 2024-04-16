@@ -1,5 +1,6 @@
 package com.tu.hellospring.dtos.requests;
 
+import com.tu.hellospring.validators.DobConstraint;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -8,6 +9,7 @@ import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 @Data
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -20,5 +22,8 @@ public class UserUpdateRequestDTO {
 
     String lastName;
 
+    @DobConstraint(min = 16, message = "INVALID_DOB")
     LocalDate dob;
+
+    Set<String> roles;
 }

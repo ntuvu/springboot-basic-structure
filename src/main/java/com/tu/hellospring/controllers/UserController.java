@@ -33,6 +33,8 @@ public class UserController {
 
     @GetMapping
     public ApiResponseDTO<List<UserResponseDTO>> getAll() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        log.info("Authorities: {}", authentication.getAuthorities());
 
         return ApiResponseDTO.<List<UserResponseDTO>>builder().result(userService.getAll()).build();
     }
@@ -43,7 +45,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ApiResponseDTO<UserResponseDTO> update(@RequestBody UserUpdateRequestDTO request, @PathVariable String id) {
+    public ApiResponseDTO<UserResponseDTO> update(@RequestBody @Valid UserUpdateRequestDTO request, @PathVariable String id) {
         return ApiResponseDTO.<UserResponseDTO>builder().result(userService.update(request, id)).build();
     }
 
@@ -51,5 +53,12 @@ public class UserController {
     public String delete(@PathVariable String id) {
         userService.delete(id);
         return "User has been deleted";
+    }
+
+    @GetMapping("/my-info")
+    public ApiResponseDTO<UserResponseDTO> getMyInfo() {
+        return ApiResponseDTO.<UserResponseDTO>builder()
+                .result(userService.getMyInfo())
+                .build();
     }
 }

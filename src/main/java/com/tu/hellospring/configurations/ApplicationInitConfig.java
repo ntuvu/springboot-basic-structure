@@ -1,7 +1,10 @@
 package com.tu.hellospring.configurations;
 
+import com.tu.hellospring.entities.Role;
 import com.tu.hellospring.entities.User;
-import com.tu.hellospring.enums.Role;
+import com.tu.hellospring.exceptions.AppException;
+import com.tu.hellospring.exceptions.ErrorCode;
+import com.tu.hellospring.repositories.RoleRepository;
 import com.tu.hellospring.repositories.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -21,13 +24,14 @@ import java.util.HashSet;
 public class ApplicationInitConfig {
 
     PasswordEncoder passwordEncoder;
+    RoleRepository roleRepository;
 
     @Bean
-    ApplicationRunner applicationRunner(UserRepository userRepository){
+    ApplicationRunner applicationRunner(UserRepository userRepository) {
         return args -> {
-            if (userRepository.findByUsername("admin").isEmpty()){
-                var roles = new HashSet<String>();
-                roles.add(Role.ADMIN.name());
+            if (userRepository.findByUsername("admin").isEmpty()) {
+                var roles = new HashSet<Role>();
+                roles.add(roleRepository.findById("ADMIN").orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_EXISTED)));
 
                 User user = User.builder()
                         .username("admin")

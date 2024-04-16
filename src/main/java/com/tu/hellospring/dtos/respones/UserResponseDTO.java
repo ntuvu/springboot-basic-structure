@@ -1,5 +1,6 @@
 package com.tu.hellospring.dtos.respones;
 
+import com.tu.hellospring.entities.Role;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
@@ -24,5 +25,5 @@ public class UserResponseDTO {
 
     LocalDate dob;
 
-    Set<String> roles;
+    Set<RoleResponseDTO> roles;
 }

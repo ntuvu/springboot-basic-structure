@@ -9,6 +9,8 @@ import com.tu.hellospring.services.AuthenticationService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@Slf4j
 public class AuthenticationController {
 
     AuthenticationService authenticationService;
@@ -31,6 +34,9 @@ public class AuthenticationController {
 
     @PostMapping("/introspect")
     public ApiResponseDTO<IntrospectResponseDTO> introspect(@RequestBody IntrospectRequestDTO request) {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        log.info("Authorities: {}", authentication.getAuthorities());
+
         return ApiResponseDTO.<IntrospectResponseDTO>builder()
                 .result(authenticationService.introspect(request))
                 .build();
