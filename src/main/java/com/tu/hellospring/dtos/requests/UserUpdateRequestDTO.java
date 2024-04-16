@@ -11,9 +11,11 @@ import lombok.experimental.FieldDefaults;
 import java.time.LocalDate;
 import java.util.Set;
 
-@Data
+@Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserUpdateRequestDTO {
+
+    String username;
 
     @Size(min = 8, max = 20, message = "PASSWORD_INVALID")
     String password;

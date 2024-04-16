@@ -2,6 +2,7 @@ package com.tu.hellospring.controllers;
 
 import com.tu.hellospring.dtos.requests.AuthenticationRequestDTO;
 import com.tu.hellospring.dtos.requests.IntrospectRequestDTO;
+import com.tu.hellospring.dtos.requests.LogoutRequestDTO;
 import com.tu.hellospring.dtos.respones.ApiResponseDTO;
 import com.tu.hellospring.dtos.respones.AuthenticationResponseDTO;
 import com.tu.hellospring.dtos.respones.IntrospectResponseDTO;
@@ -39,6 +40,13 @@ public class AuthenticationController {
 
         return ApiResponseDTO.<IntrospectResponseDTO>builder()
                 .result(authenticationService.introspect(request))
+                .build();
+    }
+
+    @PostMapping("/logout")
+    public ApiResponseDTO<Void> logout(@RequestBody LogoutRequestDTO request) {
+        authenticationService.logout(request);
+        return ApiResponseDTO.<Void>builder()
                 .build();
     }
 }

@@ -10,11 +10,14 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import com.tu.hellospring.dtos.requests.AuthenticationRequestDTO;
 import com.tu.hellospring.dtos.requests.IntrospectRequestDTO;
+import com.tu.hellospring.dtos.requests.LogoutRequestDTO;
 import com.tu.hellospring.dtos.respones.AuthenticationResponseDTO;
 import com.tu.hellospring.dtos.respones.IntrospectResponseDTO;
+import com.tu.hellospring.entities.InvalidatedToken;
 import com.tu.hellospring.entities.User;
 import com.tu.hellospring.exceptions.AppException;
 import com.tu.hellospring.exceptions.ErrorCode;
+import com.tu.hellospring.repositories.InvalidatedTokenRepository;
 import com.tu.hellospring.repositories.UserRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -27,9 +30,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.StringJoiner;
+import java.util.UUID;
 
 @Service
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
@@ -37,6 +42,7 @@ import java.util.StringJoiner;
 public class AuthenticationService {
 
     UserRepository userRepository;
+    InvalidatedTokenRepository invalidatedTokenRepository;
 
     @NonFinal
     @Value("${jwt.signerKey}")
@@ -61,8 +67,35 @@ public class AuthenticationService {
 
     @SneakyThrows
     public IntrospectResponseDTO introspect(IntrospectRequestDTO request) {
-        String token = request.getToken();
+        boolean isValidToken = true;
+        try {
+            this.verifyToken(request.getToken());
+        } catch (AppException e) {
+            isValidToken = false;
+        }
 
+        return IntrospectResponseDTO.builder()
+                .isValid(isValidToken)
+                .build();
+    }
+
+    @SneakyThrows
+    public void logout(LogoutRequestDTO request) {
+        var signToken = this.verifyToken(request.getToken());
+
+        var jti = signToken.getJWTClaimsSet().getJWTID();
+        var expiryTime = signToken.getJWTClaimsSet().getExpirationTime();
+
+        var invalidatedToken = InvalidatedToken.builder()
+                .id(jti)
+                .expiryTime(Instant.ofEpochMilli(expiryTime.getTime()).atZone(ZoneId.systemDefault()).toLocalDateTime())
+                .build();
+
+        invalidatedTokenRepository.save(invalidatedToken);
+    }
+
+    @SneakyThrows
+    private SignedJWT verifyToken(String token) {
         var verifier = new MACVerifier(SIGNER_KEY.getBytes());
 
         var signedJWT = SignedJWT.parse(token);
@@ -71,11 +104,15 @@ public class AuthenticationService {
 
         boolean verified = signedJWT.verify(verifier);
 
-        boolean isValid = verified && expirationTime.after(new Date());
+        if (!(verified && expirationTime.after(new Date()))) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
 
-        return IntrospectResponseDTO.builder()
-                .isValid(isValid)
-                .build();
+        if (invalidatedTokenRepository.existsById(signedJWT.getJWTClaimsSet().getJWTID())) {
+            throw new AppException(ErrorCode.UNAUTHENTICATED);
+        }
+
+        return signedJWT;
     }
 
     @SneakyThrows
@@ -90,6 +127,7 @@ public class AuthenticationService {
                 .issueTime(new Date())
                 .expirationTime(new Date(Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()))
                 .claim("scope", buildScope(user))
+                .jwtID(UUID.randomUUID().toString())
                 .build();
         // payload
         var payload = new Payload(jwtClaimsSet.toJSONObject());

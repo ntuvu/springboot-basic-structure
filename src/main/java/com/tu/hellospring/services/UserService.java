@@ -49,7 +49,7 @@ public class UserService {
         return userMapper.toUserResponseDTO(userRepository.save(user));
     }
 
-    @PreAuthorize("('SCOPE_APPROVE_POST')")
+    @PreAuthorize("hasAuthority('SCOPE_APPROVE_POST')")
     public List<UserResponseDTO> getAll() {
         log.info("In method getAll");
 
@@ -65,7 +65,11 @@ public class UserService {
     }
 
     public UserResponseDTO update(UserUpdateRequestDTO request, String id) {
-        User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(id).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_EXISTED));
+
+        if (!user.getUsername().equals(request.getUsername()) && userRepository.existsByUsername(request.getUsername())) {
+            throw new AppException(ErrorCode.USER_EXISTED);
+        }
 
         userMapper.updateUser(user, request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));

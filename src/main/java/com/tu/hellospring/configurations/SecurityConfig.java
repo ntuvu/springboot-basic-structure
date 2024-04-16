@@ -1,5 +1,6 @@
 package com.tu.hellospring.configurations;
 
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.experimental.NonFinal;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,13 +23,15 @@ import javax.crypto.spec.SecretKeySpec;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final String[] PUBLIC_ENDPOINTS = {"/auth/login", "auth/introspect"};
+    private final String[] PUBLIC_ENDPOINTS = {"/auth/login", "/auth/introspect", "/auth/logout"};
 
-    @NonFinal
     @Value("${jwt.signerKey}")
-    protected String SIGNER_KEY;
+    private String SIGNER_KEY;
+
+    private final CustomJwtDecoder jwtDecoder;
 
     @Bean
     @SneakyThrows
@@ -39,19 +42,12 @@ public class SecurityConfig {
                 .anyRequest().authenticated());
 
         httpSecurity.oauth2ResourceServer(oauth2 -> oauth2
-                .jwt(jwtConfigurer -> jwtConfigurer.decoder(this.jwtDecoder()))
+                .jwt(jwtConfigurer -> jwtConfigurer.decoder(jwtDecoder))
                 .authenticationEntryPoint(new JwtAuthenticationEntryPoint()));
 
         httpSecurity.csrf(AbstractHttpConfigurer::disable);
 
         return httpSecurity.build();
-    }
-
-    @Bean
-    JwtDecoder jwtDecoder() {
-        var secretKeySpec = new SecretKeySpec(SIGNER_KEY.getBytes(), "HS512");
-
-        return NimbusJwtDecoder.withSecretKey(secretKeySpec).macAlgorithm(MacAlgorithm.HS512).build();
     }
 
     @Bean
