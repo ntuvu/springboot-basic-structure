@@ -54,6 +54,7 @@ public class GlobalExceptionHandler {
 
         }
 
+
         ApiResponseDTO response = new ApiResponseDTO();
         response.setCode(errorCode.getCode());
         response.setMessage(Objects.nonNull(attributes) ? this.mapAttribute(errorCode.getMessage(), attributes): errorCode.getMessage());

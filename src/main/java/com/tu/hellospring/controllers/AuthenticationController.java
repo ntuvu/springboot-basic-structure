@@ -3,6 +3,7 @@ package com.tu.hellospring.controllers;
 import com.tu.hellospring.dtos.requests.AuthenticationRequestDTO;
 import com.tu.hellospring.dtos.requests.IntrospectRequestDTO;
 import com.tu.hellospring.dtos.requests.LogoutRequestDTO;
+import com.tu.hellospring.dtos.requests.RefreshTokenRequestDTO;
 import com.tu.hellospring.dtos.respones.ApiResponseDTO;
 import com.tu.hellospring.dtos.respones.AuthenticationResponseDTO;
 import com.tu.hellospring.dtos.respones.IntrospectResponseDTO;
@@ -47,6 +48,13 @@ public class AuthenticationController {
     public ApiResponseDTO<Void> logout(@RequestBody LogoutRequestDTO request) {
         authenticationService.logout(request);
         return ApiResponseDTO.<Void>builder()
+                .build();
+    }
+
+    @PostMapping("/refresh")
+    public ApiResponseDTO<AuthenticationResponseDTO> getRefreshToken(@RequestBody RefreshTokenRequestDTO request) {
+        return ApiResponseDTO.<AuthenticationResponseDTO>builder()
+                .result(authenticationService.refreshToken(request))
                 .build();
     }
 }

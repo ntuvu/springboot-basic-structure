@@ -3,9 +3,8 @@ package com.tu.hellospring.dtos.requests;
 import com.tu.hellospring.validators.DobConstraint;
 import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
-import lombok.Data;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
@@ -13,6 +12,7 @@ import java.util.Set;
 
 @Getter
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Builder
 public class UserUpdateRequestDTO {
 
     String username;

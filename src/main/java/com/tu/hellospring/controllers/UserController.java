@@ -4,7 +4,6 @@ import com.tu.hellospring.dtos.requests.UserCreateRequestDTO;
 import com.tu.hellospring.dtos.requests.UserUpdateRequestDTO;
 import com.tu.hellospring.dtos.respones.ApiResponseDTO;
 import com.tu.hellospring.dtos.respones.UserResponseDTO;
-import com.tu.hellospring.entities.User;
 import com.tu.hellospring.services.UserService;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
@@ -28,6 +27,7 @@ public class UserController {
 
     @PostMapping
     public ApiResponseDTO<UserResponseDTO> create(@RequestBody @Valid UserCreateRequestDTO request) {
+        log.info("Controller: Create user");
         return ApiResponseDTO.<UserResponseDTO>builder().result(userService.create(request)).build();
     }
 

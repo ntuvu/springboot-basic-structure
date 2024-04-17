@@ -11,6 +11,7 @@ import com.nimbusds.jwt.SignedJWT;
 import com.tu.hellospring.dtos.requests.AuthenticationRequestDTO;
 import com.tu.hellospring.dtos.requests.IntrospectRequestDTO;
 import com.tu.hellospring.dtos.requests.LogoutRequestDTO;
+import com.tu.hellospring.dtos.requests.RefreshTokenRequestDTO;
 import com.tu.hellospring.dtos.respones.AuthenticationResponseDTO;
 import com.tu.hellospring.dtos.respones.IntrospectResponseDTO;
 import com.tu.hellospring.entities.InvalidatedToken;
@@ -95,6 +96,29 @@ public class AuthenticationService {
     }
 
     @SneakyThrows
+    public AuthenticationResponseDTO refreshToken(RefreshTokenRequestDTO request) {
+        var signedJWT = this.verifyToken(request.getToken());
+
+        var jti = signedJWT.getJWTClaimsSet().getJWTID();
+        var expiryTime = signedJWT.getJWTClaimsSet().getExpirationTime();
+
+        var invalidatedToken = InvalidatedToken.builder()
+                .id(jti)
+                .expiryTime(Instant.ofEpochMilli(expiryTime.getTime()).atZone(ZoneId.systemDefault()).toLocalDateTime())
+                .build();
+
+        invalidatedTokenRepository.save(invalidatedToken);
+
+        var username = signedJWT.getJWTClaimsSet().getSubject();
+        var user = userRepository.findByUsername(username).orElseThrow(() -> new AppException(ErrorCode.UNAUTHENTICATED));
+
+        String token = this.generateToken(user);
+        return AuthenticationResponseDTO.builder()
+                .token(token)
+                .build();
+    }
+
+    @SneakyThrows
     private SignedJWT verifyToken(String token) {
         var verifier = new MACVerifier(SIGNER_KEY.getBytes());
 
@@ -145,9 +169,7 @@ public class AuthenticationService {
             user.getRoles().forEach(role -> {
                 stringJoiner.add("ROLE_" + role.getName());
                 if (!CollectionUtils.isEmpty(role.getPermissions())) {
-                    role.getPermissions().forEach(permission -> {
-                        stringJoiner.add(permission.getName());
-                    });
+                    role.getPermissions().forEach(permission -> stringJoiner.add(permission.getName()));
                 }
             });
         }

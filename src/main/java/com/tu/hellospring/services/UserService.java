@@ -4,7 +4,6 @@ import com.tu.hellospring.dtos.requests.UserCreateRequestDTO;
 import com.tu.hellospring.dtos.requests.UserUpdateRequestDTO;
 import com.tu.hellospring.dtos.respones.UserResponseDTO;
 import com.tu.hellospring.entities.User;
-import com.tu.hellospring.enums.Role;
 import com.tu.hellospring.exceptions.AppException;
 import com.tu.hellospring.exceptions.ErrorCode;
 import com.tu.hellospring.mappers.UserMapper;
@@ -24,7 +23,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -38,6 +36,7 @@ public class UserService {
     private final RoleRepository roleRepository;
 
     public UserResponseDTO create(UserCreateRequestDTO request) {
+        log.info("Service: Create user");
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
