@@ -32,6 +32,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) {
         httpSecurity.authorizeHttpRequests(request -> request
                 .requestMatchers(HttpMethod.POST, PUBLIC_ENDPOINTS).permitAll()
+                .requestMatchers(HttpMethod.GET, "/hello").permitAll()
 //                .requestMatchers(HttpMethod.GET, "/users").hasAuthority("SCOPE_ADMIN")
                 .anyRequest().authenticated());
 
