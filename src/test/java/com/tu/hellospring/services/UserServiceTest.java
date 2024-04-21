@@ -4,14 +4,17 @@ import com.tu.hellospring.dtos.requests.UserCreateRequestDTO;
 import com.tu.hellospring.dtos.respones.UserResponseDTO;
 import com.tu.hellospring.entities.User;
 import com.tu.hellospring.exceptions.AppException;
+import com.tu.hellospring.exceptions.ErrorCode;
 import com.tu.hellospring.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -83,5 +86,24 @@ public class UserServiceTest {
         var exception = assertThrows(AppException.class, () -> userService.create(userCreateRequest));
         assertThat(exception.getErrorCode().getCode()).isEqualTo(1001);
 
+    }
+
+    @Test
+    @WithMockUser(username = "john")
+    public void getMyInfo_valid_success() {
+        when(userRepository.findByUsername(anyString())).thenReturn(Optional.of(user));
+        var response = userService.getMyInfo();
+
+        assertThat(response.getUsername()).isEqualTo(user.getUsername());
+        assertThat(response.getId()).isEqualTo(user.getId());
+    }
+
+    @Test
+    @WithMockUser(username = "john")
+    public void getMyInfo_userNotFound_error() {
+        when(userRepository.findByUsername(anyString())).thenReturn(Optional.ofNullable(null));
+        var exception = assertThrows(AppException.class, () -> userService.getMyInfo());
+
+        assertThat(exception.getErrorCode().getCode()).isEqualTo(ErrorCode.USER_NOT_EXISTED.getCode());
     }
 }
