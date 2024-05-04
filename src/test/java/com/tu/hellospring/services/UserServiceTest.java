@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
-public class UserServiceTest {
+class UserServiceTest {
 
     @Autowired
     private UserService userService;
@@ -62,7 +62,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void createUser_validRequest_success() {
+    void createUser_validRequest_success() {
         // GIVEN
         when(userRepository.existsByUsername(anyString())).thenReturn(false);
         when(userRepository.save(any())).thenReturn(user);
@@ -78,7 +78,7 @@ public class UserServiceTest {
     }
 
     @Test
-    public void createUser_userExisted_fail() {
+    void createUser_userExisted_fail() {
         // GIVEN
         when(userRepository.existsByUsername(anyString())).thenReturn(true);
 
@@ -90,7 +90,7 @@ public class UserServiceTest {
 
     @Test
     @WithMockUser(username = "john")
-    public void getMyInfo_valid_success() {
+    void getMyInfo_valid_success() {
         when(userRepository.findByUsername(anyString())).thenReturn(Optional.of(user));
         var response = userService.getMyInfo();
 
@@ -100,8 +100,8 @@ public class UserServiceTest {
 
     @Test
     @WithMockUser(username = "john")
-    public void getMyInfo_userNotFound_error() {
-        when(userRepository.findByUsername(anyString())).thenReturn(Optional.ofNullable(null));
+    void getMyInfo_userNotFound_error() {
+        when(userRepository.findByUsername(anyString())).thenReturn(Optional.empty());
         var exception = assertThrows(AppException.class, () -> userService.getMyInfo());
 
         assertThat(exception.getErrorCode().getCode()).isEqualTo(ErrorCode.USER_NOT_EXISTED.getCode());

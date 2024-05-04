@@ -24,7 +24,7 @@ import java.time.LocalDate;
 @SpringBootTest
 @Slf4j
 @AutoConfigureMockMvc(addFilters = false)
-public class UserControllerTest {
+class UserControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -60,7 +60,7 @@ public class UserControllerTest {
 
     @Test
     @SneakyThrows
-    public void create_validRequest_success() {
+    void create_validRequest_success() {
         // GIVEN
         var content = objectMapper.writeValueAsString(userCreateRequest);
 
@@ -79,7 +79,7 @@ public class UserControllerTest {
 
     @Test
     @SneakyThrows
-    public void create_usernameInvalid_fail() {
+    void create_usernameInvalid_fail() {
         // GIVEN
         userCreateRequest.setUsername("jo");
         var content = objectMapper.writeValueAsString(userCreateRequest);
